@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: com.fudco.selectabletls
+Implementation-Version: 0.1.0
+

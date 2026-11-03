@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.fudco</groupId>
+  <artifactId>selectable-tls</artifactId>
+  <version>0.1.0</version>
+  <name>SelectableTLS</name>
+  <description>TLS channels and selectors using public Java NIO and JSSE APIs.</description>
+  <url>https://github.com/FUDCo/SelectableTLS</url>
+  <developers>
+    <developer>
+      <name>FUDCo</name>
+      <url>https://www.fudco.com/</url>
+      <organization>FUDCo</organization>
+      <organizationUrl>https://www.fudco.com/</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:https://github.com/FUDCo/SelectableTLS.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/FUDCo/SelectableTLS.git</developerConnection>
+    <url>https://github.com/FUDCo/SelectableTLS</url>
+    <tag>v0.1.0</tag>
+  </scm>
+  <licenses>
+    <license><name>MIT License</name><url>https://opensource.org/license/mit</url></license>
+  </licenses>
+  <properties>
+    <maven.compiler.release>17</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.build.outputTimestamp>2026-10-31T00:00:00Z</project.build.outputTimestamp>
+  </properties>
+  <build>
+    <resources>
+      <resource><directory>${project.basedir}</directory><includes><include>LICENSE</include></includes></resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.16.0</version>
+        <configuration><compilerArgs><arg>-Xlint:all</arg><arg>-Werror</arg></compilerArgs></configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId><artifactId>exec-maven-plugin</artifactId><version>3.6.4</version>
+        <executions>
+          <execution>
+            <id>conformance</id><phase>test</phase><goals><goal>exec</goal></goals>
+            <configuration>
+              <executable>${java.home}/bin/java</executable>
+              <classpathScope>test</classpathScope>
+              <arguments><argument>-ea</argument><argument>-classpath</argument><classpath/>
+                <argument>com.fudco.selectabletls.ConformanceTest</argument></arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.5.1</version>
+        <configuration><archive><manifestEntries>
+          <Automatic-Module-Name>com.fudco.selectabletls</Automatic-Module-Name>
+          <Implementation-Version>${project.version}</Implementation-Version>
+        </manifestEntries></archive></configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

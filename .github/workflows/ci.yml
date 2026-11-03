@@ -1,0 +1,98 @@
+name: Java conformance
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  conformance:
+    name: ${{ matrix.os }} / JDK ${{ matrix.java }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+        java: ['17', '21', '25']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Obtain jdep for the make build
+        if: runner.os != 'Windows'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: FUDCo/jdep
+          ref: 7b940380b090159b854d69a2a8ba6a8ae9226c84
+          path: External/jdep
+      - name: Build jdep
+        if: runner.os != 'Windows'
+        run: |
+          make -C External/jdep
+          echo "$GITHUB_WORKSPACE/External/jdep/bin" >> "$GITHUB_PATH"
+      - name: Build and run conformance, including forced TLS key updates
+        if: runner.os != 'Windows'
+        run: make test package
+      - name: Verify the Maven alternative on Windows
+        if: runner.os == 'Windows'
+        run: mvn -B -ntp clean verify
+      - name: Repeat interruption and close-drain races
+        if: runner.os != 'Windows'
+        run: make lifecycle ARGS=1000
+      - name: Repeat lifecycle races on Windows
+        if: runner.os == 'Windows'
+        run: java -ea -cp "target/classes;target/test-classes" com.fudco.selectabletls.ConformanceTest lifecycle 1000
+      - name: Exercise concurrent traffic, churn, malformed peers and timeout recovery
+        if: runner.os != 'Windows'
+        run: make stress ARGS='64 16 100 4 128'
+      - name: Exercise the Maven-built artifact on Windows
+        if: runner.os == 'Windows'
+        run: java -ea -cp "target/classes;target/test-classes" com.fudco.selectabletls.StressProbe 64 16 100 4 128
+      - name: Retain built artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: selectable-tls-${{ matrix.os }}-jdk${{ matrix.java }}
+          path: ${{ runner.os == 'Windows' && 'target/selectable-tls-*.jar' || 'build/selectable-tls.jar' }}
+          if-no-files-found: error
+          retention-days: 14
+
+  resource-probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Obtain jdep
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: FUDCo/jdep
+          ref: 7b940380b090159b854d69a2a8ba6a8ae9226c84
+          path: External/jdep
+      - name: Build jdep
+        run: |
+          make -C External/jdep
+          echo "$GITHUB_WORKSPACE/External/jdep/bin" >> "$GITHUB_PATH"
+      - name: Check incremental builds and failure recovery
+        run: make check-build
+      - name: Record diagnostic resource probe without a performance pass threshold
+        run: make probe ARGS='256 2000'
+      - name: Record matching native plaintext diagnostic
+        run: make probe ARGS='256 2000 plain'
+      - name: Compile and run the documented example
+        run: make examples
+      - name: Build binary, source and Javadoc distribution
+        run: make distribution
