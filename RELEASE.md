@@ -21,10 +21,9 @@ SSLContext; application credentials are not part of the distribution.
 
 ## Maven and Gradle
 
-Maven Central publication is pending. Until it is available there, download the
-GitHub release and use the local installation command below. The coordinate is
-`com.fudco:selectable-tls:0.1.0`. After local installation or Central publication,
-use the following dependency declaration for Maven:
+SelectableTLS is available from
+[Maven Central](https://repo.maven.apache.org/maven2/com/fudco/selectable-tls/0.1.0/)
+as `com.fudco:selectable-tls:0.1.0`. For Maven:
 
 ```xml
 <dependency>
@@ -67,9 +66,9 @@ plain classpaths do not need Maven or Gradle.
 | `PROVENANCE.md` | Public source revision and build toolchain |
 | `SHA256SUMS` | SHA-256 checksums of the release files |
 
-Maven Central publication will include signatures and its required per-file checksums for
-the POM and three JARs. The complete source archive and contributor tools are not
-runtime dependencies.
+Maven Central includes PGP signatures and per-file checksums for the POM and
+three JARs. The complete source archive and contributor tools are not runtime
+dependencies.
 
 The source tree's `FutureWork/` directory contains optional testing and performance
 notes for library contributors. It is separate from application-facing API
